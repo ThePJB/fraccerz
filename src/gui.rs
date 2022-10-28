@@ -44,10 +44,11 @@ impl Default for GUI {
                     let mut div = false;
                     
                     while iters < job.max_iters {
-                        if z.mag2() > 4.0 {
+                        if z.mag2() > 10.0 {
                             div = true;
                             break;
                         }
+                        // z = z.complex_mul(z) + c;
                         // this is the sick triangle one, its really cool
                         // z^2 / (z + 0.01i) (z-0.01i) + c
                         // z = z.complex_mul(z).complex_div(z.plus(Vec2::new(0.00, 0.01)).complex_mul(z.plus(Vec2::new(0.00, -0.01)))) + c;
