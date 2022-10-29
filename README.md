@@ -1,9 +1,9 @@
 ## Fraccerz 
 $$ z = \frac{z^2}{(z + 0.01i)(z - 0.02i)} + c$$
-![plz work](https://github.com/kennoath/fraccerz/blob/master/f1.png "plz work")
+![plz work](/f1.png)
 
 $$ z = \frac{z^2}{(z + \frac{1}{\sqrt{2}i})(z - \frac{1}{\sqrt{2}}i)} + c$$
-![plz work](https://github.com/kennoath/fraccerz/blob/master/f2.png "plz work")
+![plz work](f2.png)
 
 
 Its a fully sick fractal program
