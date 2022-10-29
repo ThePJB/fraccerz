@@ -1,4 +1,7 @@
-# Fraccerz 
+# Fraccerz
+
+## Building
+`cargo run --release`
 
 $$ z = \frac{z^2}{(z + 0.01i)(z - 0.02i)} + c$$
 
