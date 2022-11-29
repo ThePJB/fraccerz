@@ -44,10 +44,12 @@ impl Default for GUI {
                     let mut div = false;
                     
                     while iters < job.max_iters {
-                        if z.mag2() > 10.0 {
+                        if z.mag2() > 100.0 {
                             div = true;
                             break;
                         }
+                        // fracting x makes eyelashes
+                        // z = Vec2::new(z.x.fract().abs(), z.y.fract().abs());
                         // z = z.complex_mul(z) + c;
                         // this is the sick triangle one, its really cool
                         // z^2 / (z + 0.01i) (z-0.01i) + c
@@ -55,7 +57,9 @@ impl Default for GUI {
 
                         // related
                         // z = z.complex_mul(z).complex_div(z.plus(Vec2::new(0.00, PHI)).complex_mul(z.plus(Vec2::new(0.00, -PHI)))) + c;
-                        z = z.complex_mul(z).complex_div(z.plus(Vec2::new(0.00, ROOT2INV)).complex_mul(z.plus(Vec2::new(0.00, -ROOT2INV)))) + c;
+                        // original
+                        //z = z.complex_mul(z).complex_div(z.plus(Vec2::new(0.00, ROOT2INV)).complex_mul(z.plus(Vec2::new(0.00, -ROOT2INV)))) + c;
+                        // z = z.complex_mul(z).complex_div(z.plus(Vec2::new(0.00, PI)).complex_mul(z.plus(Vec2::new(0.05, 0.5))).complex_mul(z.plus(Vec2::new(0.05, ROOT2)))) + c;
 
                         // hyper giga laser
                         // z^2 / (z+0.01)^2  + c
@@ -65,7 +69,7 @@ impl Default for GUI {
                         // z = z.complex_mul(z).complex_div(z.plus(Vec2::new(0.00, 0.01)).complex_mul(z.plus(Vec2::new(0.00, -0.02)))) + c;
                         
                         // lanterns
-                        // z = z.complex_mul(z).complex_div(z.plus(Vec2::new(0.00, 0.01))) + c;
+                        z = z.complex_mul(z).complex_div(z.plus(Vec2::new(0.00, 0.01))) + c;
 
                         //z = z.complex_mul(z).plus(z).complex_mul(z).plus(z).complex_mul(z).plus(z).complex_mul(z).plus(z).complex_mul(z).plus(z) + c;
 
@@ -81,6 +85,38 @@ impl Default for GUI {
                         // let zp = zp.complex_mul(z);
                         // z = zp + c;
 
+                        // oh fuck its the shiftlebrot set
+                        // let t = 0.1;
+                        // z = z.minus(Vec2::new(t, 0.0)).complex_mul(z.plus(Vec2::new(t, 0.0))) + c;
+                        // z = z.plus(Vec2::new(0.0, t)).complex_mul(z.plus(Vec2::new(0.0, t))) + c;
+
+                        // let o = Vec2::new(t, 0.0);
+                        // z = z.complex_mul(z).plus(o).complex_div(z.minus(o)) + c;
+
+                        // miniverse one
+                        // z = z.complex_div(
+                        //     z.plus(Vec2::new(0.0, 0.5)).complex_mul(
+                        //         z.plus(Vec2::new(0.0, -0.5)).complex_mul(
+                        //             z.plus(Vec2::new(-2.0, 0.0))
+                        //         )
+                        //     )
+                        // ) + c;
+
+                        // z = c.complex_mul(z.plus(Vec2::new(0.0, 1.0))).complex_mul(c).plus(c).complex_div(z.plus(Vec2::new(0.33, 0.33)).complex_mul(z.plus(Vec2::new(0.0, -2.0)))) + c;
+
+                        // z = z.plus(c).complex_mul(z.plus(c));
+                        // z = z.complex_mul(z).plus(c);
+
+                        // z = Vec2::new(z.x.abs(), z.y.abs());
+                        // z = z.complex_mul(z) + c;
+
+                        // z = z.complex_div(
+                        //     z.plus(Vec2::new(1.0, 0.5)).complex_mul(
+                        //         z.plus(Vec2::new(0.0, -0.5)).complex_mul(
+                        //             z.plus(Vec2::new(-2.0, 0.0))
+                        //         )
+                        //     )
+                        // ) + c;
 
                         iters += 1;
                     }
@@ -97,10 +133,10 @@ impl Default for GUI {
 
         let mut palette = [Vec4::new(0.0, 0.0, 0.0, 0.0); ITER_MAX_MAX as usize];
         let mut theta = 0.0;
-        let mut theta_mul = 4.0;
+        let mut theta_mul = 2.0;
         for i in 0..ITER_MAX_MAX {
             palette[i as usize] = Vec4::new(theta, 1.0, 1.0, 1.0).hsv_to_rgb();
-            theta_mul *= 0.9999;
+            theta_mul *= 0.999;
             theta += theta_mul;
         }
         /*
@@ -131,6 +167,7 @@ impl Default for GUI {
             view_h: 4.0,
             stale: true,
             palette,
+            path_c: None,
         }
     }
 }
@@ -146,6 +183,8 @@ pub struct GUI {
     view_h: f64,
     stale: bool,
     palette: [Vec4; ITER_MAX_MAX as usize],
+
+    path_c: Option<Vec2>,
 }
 
 
@@ -153,6 +192,7 @@ pub struct GUI {
 impl GUI {
     pub fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {
         let a = inputs.xres as f64 / inputs.yres as f64;
+        let r = self.view_center.rect_centered(self.view_h * inputs.screen_rect.aspect(), self.view_h);
 
         let mut any_zoom = false;
         if inputs.key_held(VirtualKeyCode::LShift) && inputs.lmb == KeyStatus::JustPressed {
@@ -168,6 +208,26 @@ impl GUI {
             let rp = inputs.mouse_pos.transform(inputs.screen_rect, r);
             self.view_center = rp;
             self.view_h *= 2.0;
+        } else if (inputs.lmb == KeyStatus::Pressed && !inputs.key_held(VirtualKeyCode::LShift) && !inputs.key_held(VirtualKeyCode::LControl)) {
+            self.path_c = Some(inputs.mouse_pos.transform(inputs.screen_rect, r));
+        }
+
+        
+        if let Some(path_c) = self.path_c {
+            let mut zold = Vec2::new(0.0, 0.0);
+            let mut z = Vec2::new(0.0, 0.0);
+            for _ in 0..1000 {
+
+                z = Vec2::new(z.x.abs(), z.y.abs());
+                z = z.complex_mul(z) + path_c;
+
+                let start = zold.transform(r, inputs.screen_rect);
+                let end = z.transform(r, inputs.screen_rect);
+    
+    
+                outputs.canvas.put_line(start, end, 0.002, 2.0, Vec4::new(1.0, 0.0, 0.0, 1.0));
+                zold = z;
+            }
         }
 
         // handle zoom or res switch
@@ -187,6 +247,7 @@ impl GUI {
                     let r = self.view_center.rect_centered(a * self.view_h, self.view_h);
                     let x = r.left() as f64 + (x_px as f64 + 0.5) * r.w as f64 / inputs.xres as f64;
                     let y = -r.bot() as f64 + (y_px as f64 + 0.5) * r.h as f64 / inputs.yres as f64;
+                    let y = -y;
                     self.sender.send(Job {
                         x_px,
                         y_px,
@@ -212,6 +273,7 @@ impl GUI {
                     let r = self.view_center.rect_centered(a * self.view_h, self.view_h);
                     let x = r.left() as f64 + (x_px as f64 + 0.5) * r.w as f64 / inputs.xres as f64;
                     let y = -r.bot() as f64 + (y_px as f64 + 0.5) * r.h as f64 / inputs.yres as f64;
+                    let y = -y;
                     self.sender.send(Job {
                         x_px,
                         y_px,

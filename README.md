@@ -23,3 +23,4 @@ protip: if you want to move around quick make the window small
 - SIMD
 - radix option might make it faster?? if the overhead of the mpmc is stupid
 - storing what z got up to? maybe faster
+- like I wonder if copying data through channels and stuff is slow
